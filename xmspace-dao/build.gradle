@@ -1,0 +1,12 @@
+
+dependencies {
+	compile project(':xmspace-dbbean')
+    compile group: 'org.springframework', name: 'spring-context', version:'4.0.5.RELEASE'
+    compile group: 'org.springframework', name: 'spring-orm', version:'4.0.5.RELEASE'
+    compile group: 'org.hibernate', name: 'hibernate-core', version:'3.6.10.Final'
+    compile group: 'org.apache.commons', name: 'commons-lang3', version:'3.1'
+    compile group: 'javassist', name: 'javassist', version:'3.9.0.GA'
+    compile group: 'commons-dbcp', name: 'commons-dbcp', version:'1.4'
+    compile group: 'cglib', name: 'cglib-nodep', version:'2.2'
+    compile group: 'mysql', name: 'mysql-connector-java', version:'5.1.25'
+}

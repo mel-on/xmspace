@@ -1,0 +1,5 @@
+#org.springsource.ide.eclipse.gradle.core.preferences.GradleProjectPreferences
+#Mon Aug 22 20:47:59 CST 2016
+build.family.org.gradle.tooling.model.eclipse.HierarchicalEclipseProject=;xmspace-dao;xmspace-dbbean;xmspace-util;xmspace-web;
+org.springsource.ide.eclipse.gradle.linkedresources=
+org.springsource.ide.eclipse.gradle.rootprojectloc=

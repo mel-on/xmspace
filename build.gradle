@@ -1,0 +1,68 @@
+allprojects {
+    apply plugin: 'eclipse'
+}
+
+subprojects{
+	apply plugin: 'java'
+	sourceCompatibility = 1.7
+	targetCompatibility = 1.7
+	
+	
+	sourceSets{
+		main{
+			java{
+				srcDir 'src'
+			}
+			resources{
+				srcDir 'config'
+			}
+		}
+	}
+	
+    tasks.withType(JavaCompile) {  
+        options.encoding = "UTF-8"  
+    }  
+	
+	repositories{
+		//mavenLocal()
+		//maven{ url 'http://127.0.0.1:8081/nexus/content/groups/public/'}
+		//maven{ url 'http://132.122.237.251:8081/nexus/content/groups/public/'}
+		 mavenCentral()
+	}
+	
+	dependencies{
+		compile group:'org.slf4j', name:'slf4j-api', version:'1.7.5'
+		compile group:'org.slf4j', name:'slf4j-log4j12', version:'1.7.5'
+		compile group:'org.slf4j', name:'jcl-over-slf4j', version:'1.7.5'
+	}
+}
+
+defaultTasks 'clean', 'createRunnable', 'copyJars', 'copyConfigs'
+ 
+task createRunnable(dependsOn:[':xmspace-web:war']) <<{
+	println "create runnable"
+} 
+
+//复制各模块的jar包
+task copyJars(type: Copy){
+
+	from "$projectDir/xmspace-dao/build/libs"
+	from "$projectDir/xmspace-dbbean/build/libs"
+	from "$projectDir/xmspace-util/build/libs"
+	from "$projectDir/xmspace-web/build/libs"
+
+	into 'target/libs'
+}
+
+//复制个模块的config目录
+task copyConfigs(type: Copy){
+	
+	from "$projectDir/xmspace-dao/config"
+	from "$projectDir/xmspace-dbbean-mysql/config"
+	from "$projectDir/xmspace-util/config"
+	from "$projectDir/xmspace-web/config"
+
+	into 'target/config' 
+}
+
+
