@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:ctx="http://www.springframework.org/schema/context"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:cache="http://www.springframework.org/schema/cache"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+						http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+						http://www.springframework.org/schema/context
+						http://www.springframework.org/schema/context/spring-context-4.0.xsd
+						http://www.springframework.org/schema/tx
+						http://www.springframework.org/schema/tx/spring-tx-4.0.xsd
+						http://www.springframework.org/schema/aop
+    					http://www.springframework.org/schema/aop/spring-aop-4.0.xsd			
+    					http://www.springframework.org/schema/cache
+    					http://www.springframework.org/schema/cache/spring-cache-4.0.xsd">
+
+	<!--此bean用来告诉Spring去何处找数据库信息,有此Bean才会有下面dataSource中用${}标记来取变量的语句 -->
+	<bean id="propertyConfigurer" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+		<property name="locations">
+			<list>
+				<value>classpath:jdbc.properties</value>
+				<value>classpath:config.properties</value>
+			</list>
+		</property>
+	</bean>
+	
+	<ctx:component-scan base-package="
+				com.ximelon.xmspace.dao,
+				com.ximelon.xmspace.web"
+				/>
+				
+	
+	<bean id="hibernateTemplate" class="org.springframework.orm.hibernate3.HibernateTemplate"
+		p:sessionFactory-ref="sessionFactory" />
+		
+
+	<bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource"
+		destroy-method="close" 
+		p:driverClassName="${driverClassName}" 
+		p:url="${url}" 
+		p:username="${username}" 
+		p:password="${password}"
+		p:maxIdle="${maxIdle}"
+		p:minIdle="${minIdle}"
+		p:maxActive="${maxActive}" 
+		p:maxWait="${maxWait}"
+		p:testOnBorrow="${testOnBorrow}"
+		p:testOnReturn="${testOnReturn}"
+		p:testWhileIdle="${testWhileIdle}"
+		p:validationQuery="${validationQuery}"
+		p:validationQueryTimeout="${validationQueryTimeout}"
+		p:timeBetweenEvictionRunsMillis="${timeBetweenEvictionRunsMillis}"
+		p:minEvictableIdleTimeMillis="${minEvictableIdleTimeMillis}"/>
+
+	<bean id="sessionFactory"
+		class="org.springframework.orm.hibernate3.annotation.AnnotationSessionFactoryBean"
+		p:dataSource-ref="dataSource">
+		<property name="packagesToScan">
+			<list>
+				<!-- 可以加多个包 -->
+				<value>com.ximelon.xmspace.dbbean</value>
+			</list>
+		</property>
+		<property name="hibernateProperties">
+			<props>
+				<prop key="hibernate.dialect">${hibernate.dialect}</prop>
+				<prop key="hibernate.connection.oracle.jdbc.V8Compatible">true</prop>  
+				<prop key="hibernate.show_sql">${hibernate.show_sql}</prop>
+				<prop key="format_sql">true</prop>
+			</props>
+		</property>
+	</bean>
+	
+	<bean id="transactionManager" class="org.springframework.orm.hibernate3.HibernateTransactionManager">
+       <property name="sessionFactory" ref="sessionFactory"/>
+	</bean>
+	
+	<aop:aspectj-autoproxy proxy-target-class="true"/>
+	<aop:config proxy-target-class="true"></aop:config>
+	<tx:annotation-driven proxy-target-class="true" transaction-manager="transactionManager"/> 
+	
+	<bean id="globalCache" class="com.ximelon.xmspace.web.cache.GlobalCacheService" init-method="init">
+		<property name="config" ref="timesConfig" />
+	</bean>
+	
+	<bean id="timesConfig" class="com.ximelon.xmspace.web.cache.TimesConfig">
+		<property name="userTimes" value="10" />
+	</bean>
+	
+	<bean class="org.springframework.http.converter.json.MappingJacksonHttpMessageConverter"></bean>
+</beans>

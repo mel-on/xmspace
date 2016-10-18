@@ -1,0 +1,266 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans:beans xmlns="http://www.springframework.org/schema/security"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:beans="http://www.springframework.org/schema/beans" 
+	xmlns:ctx="http://www.springframework.org/schema/context"
+	xmlns:p="http://www.springframework.org/schema/p"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+                        http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security-3.0.xsd
+                        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd">
+
+	
+	<beans:bean id="customInterceptor"
+		class="org.springframework.security.web.access.intercept.FilterSecurityInterceptor">
+		<beans:property name="authenticationManager" ref="authenticationManager" />
+		<beans:property name="accessDecisionManager" ref="accessDecisionManager" />
+		<beans:property name="securityMetadataSource" ref="securityMetadataSource" />
+	</beans:bean>
+	
+	<beans:bean id="securityMetadataSource" class="com.ximelon.xmspace.web.security.SecurityMetadataSource">
+		<beans:constructor-arg><beans:ref bean="menuDao"/></beans:constructor-arg>  
+	</beans:bean>
+	
+	
+	<beans:bean id="accessDecisionManager" class="org.springframework.security.access.vote.AffirmativeBased" >
+		<beans:property name="decisionVoters" >
+			<beans:list>
+				<beans:bean class="com.ximelon.xmspace.web.security.RoleVoter" />
+			</beans:list>
+		</beans:property>
+		<!-- <beans:property name="allowIfAllAbstainDecisions" value="true" />  -->
+	</beans:bean>
+	
+	<beans:bean id="webInvocationPrivilegeEvaluator" class="org.springframework.security.web.access.DefaultWebInvocationPrivilegeEvaluator" >
+		<beans:constructor-arg><beans:ref bean="customInterceptor"/></beans:constructor-arg>
+	</beans:bean>
+
+	<!-- 认证管理器，实现用户认证的入口，主要实现UserDetailsService接口即可 -->
+	<!-- 
+	<authentication-manager alias="authenticationManager">
+		<authentication-provider user-service-ref="jdbcUserService">
+		</authentication-provider>
+	</authentication-manager>
+	 -->
+	
+	
+
+	
+	<beans:bean id="authenticationManager" name="org.springframework.security.authenticationManager" 
+		class="org.springframework.security.authentication.ProviderManager" >
+		<beans:property name="providers">
+			<beans:list>
+					<beans:ref bean="daoAuthenticationProvider" />
+					<!-- <beans:ref bean="anonymousAuthenticationFilter" />  -->
+					<!-- p:eraseCredentialsAfterAuthentication-ref="methodInvokingFactoryBean"  -->
+			</beans:list>
+		</beans:property>
+	</beans:bean>
+
+	<beans:bean id="daoAuthenticationProvider"
+		class="org.springframework.security.authentication.dao.DaoAuthenticationProvider"
+		p:userDetailsService-ref="jdbcUserService"
+		p:passwordEncoder-ref="userPasswordEncoder"
+		p:hideUserNotFoundExceptions="false">
+	</beans:bean>
+	
+	<!-- MD5加密【用户密码部分】 -->
+	<beans:bean name="userPasswordEncoder" class="org.springframework.security.authentication.encoding.Md5PasswordEncoder" />
+	
+	<beans:bean id="authenticationManagerFactoryBean" class="org.springframework.security.config.authentication.AuthenticationManagerFactoryBean" />
+	
+	<!-- 
+	<beans:bean id="methodInvokingFactoryBean" class="org.springframework.beans.factory.config.MethodInvokingFactoryBean"
+		p:targetObject-ref="authenticationManager"
+		p:targetMethod="isEraseCredentialsAfterAuthentication" />
+	-->
+	
+
+	<beans:bean id="jdbcUserService"
+		class="com.ximelon.xmspace.web.security.DefaultAuthorityUserDetailService"
+		p:dataSource-ref="dataSource">
+		<beans:property name="usersByUsernameQuery">
+			<beans:value>select userId, password, enabled from t_user where is_del=0 and userId=?
+			</beans:value>
+		</beans:property>
+		<beans:property name="authoritiesByUsernameQuery">
+			<beans:value>select user_id, role_id from t_user_role where user_id = (select u.id from t_user u where u.userid = ?)
+			</beans:value>
+		</beans:property>
+	</beans:bean>
+
+	<beans:bean id="springSecurityFilterChain" class="org.springframework.security.web.FilterChainProxy">
+		<filter-chain-map path-type="ant">
+			<filter-chain pattern="/services/**" filters="none" />
+			<filter-chain pattern="/media/**" filters="none" />
+			<filter-chain pattern="/css/**" filters="none" />
+			<filter-chain pattern="/images/**" filters="none" />
+			<filter-chain pattern="/js/**" filters="none" />
+			<!-- 
+			<filter-chain pattern="/page/**" filters="none" />
+			 -->
+			<filter-chain pattern="/My97DatePicker/**" filters="none" />
+			<filter-chain pattern="/login.jsp" filters="channelProcessingFilter" />
+			<filter-chain pattern="/phytopo/**" filters="none" />
+
+			<filter-chain pattern="/LoginCodeCreate/createCode.do**" filters="none" />
+			<filter-chain pattern="/UserManagement/registerIndex.do**" filters="none" />
+			<filter-chain pattern="/UserManagement/register.do**" filters="none" />
+			<filter-chain pattern="/UserManagement/check**" filters="none" />
+			
+			<filter-chain pattern="/Locale/change.do**" filters="none" /><!-- 对登陆页面过滤 选择语言环境的请求 -->
+			<filter-chain pattern="/Android/**" filters="none" />
+			<filter-chain pattern="/AndroidGraph/**" filters="none" />
+			<filter-chain pattern="/File/download.do**" filters="none" />
+
+			<!-- add -->
+			<filter-chain pattern="/entity/**" filters="none" />
+			<filter-chain pattern="/upload/**" filters="none" />
+			<filter-chain pattern="/entityInfo/**" filters="none" />
+			<filter-chain pattern="/AlarmQuery/CurrentAlarm.do**" filters="none" />
+			<filter-chain pattern="/AlarmQuery/CurrentAlarmList.do**" filters="none" />
+			<filter-chain pattern="/AlarmQuery/ConfirmAlarm.do**" filters="none" />
+			<filter-chain pattern="/AlarmQuery/CleanupAlarm.do**" filters="none" />
+			<filter-chain pattern="/assessmentKpi/getExcelData.do**" filters="none" />
+			<!-- add -->
+			<filter-chain pattern="/logoutSuccess.jsp" filters="none" />
+			 <filter-chain pattern="/**" filters="
+			 channelProcessingFilter,
+			securityContextPersistenceFilter,
+			logoutFilter,
+			usernamePasswordAuthenticationFilter,
+			anonymousAuthenticationFilter,
+			springApplicationContextHelperFilter,
+			exceptionTranslationFilter,
+			customInterceptor" /> 
+			
+		</filter-chain-map>
+	</beans:bean>
+	
+	<beans:bean id="securityContextHolderAwareRequestFilter" class="org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter" >
+	</beans:bean>
+	
+	<beans:bean id="springApplicationContextHelperFilter" class="com.ximelon.xmspace.web.filter.SpringApplicationContextHelperFilter" >
+	</beans:bean>
+	
+	<beans:bean id="securityContextPersistenceFilter" class="org.springframework.security.web.context.SecurityContextPersistenceFilter" >
+		<beans:property name="securityContextRepository">
+			<beans:bean class="org.springframework.security.web.context.HttpSessionSecurityContextRepository">
+			</beans:bean>
+		</beans:property>
+	</beans:bean>
+	
+	<beans:bean id="anonymousAuthenticationFilter" class="org.springframework.security.web.authentication.AnonymousAuthenticationFilter" 
+		p:key="12390847639" 
+		p:userAttribute="anonymousUser,ROLE_ANONYMOUS" />
+
+	
+	<beans:bean id="logoutFilter" class="org.springframework.security.web.authentication.logout.LogoutFilter" p:filterProcessesUrl="/j_spring_security_logout">
+		
+		<beans:constructor-arg value="/login.jsp" />
+
+		<beans:constructor-arg>		
+				<beans:bean class="org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler" />	
+		</beans:constructor-arg>
+
+	</beans:bean>
+	
+	<beans:bean id="usernamePasswordAuthenticationFilter" class="com.ximelon.xmspace.web.security.UsernamePasswordAuthenticationFilter"
+		p:authenticationManager-ref="authenticationManager" 
+		p:filterProcessesUrl="/j_spring_security_check" 
+		p:authenticationSuccessHandler-ref="authenticationSuccessHandler"
+		p:authenticationFailureHandler-ref="authenticationFailureHandler" />
+	<!-- 登录后直接跳转到主界面改成 defaultTargetUrl：index.jsp-->	
+	<beans:bean id="authenticationSuccessHandler" 
+		class="org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler"
+		p:alwaysUseDefaultTargetUrl="true"
+		p:defaultTargetUrl="/index.jsp" />
+	<beans:bean id="authenticationFailureHandler" 
+		class="org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler"
+		p:defaultFailureUrl="/login.jsp?error=true" />
+	
+	
+
+	
+	<beans:bean id="exceptionTranslationFilter" class="org.springframework.security.web.access.ExceptionTranslationFilter" 
+		p:accessDeniedHandler-ref="accessDeniedHandler" 
+		p:requestCache-ref="httpSessionRequestCache"
+		p:authenticationEntryPoint-ref="loginUrlAuthenticationEntryPoint" />
+
+	
+	<beans:bean id="accessDeniedHandler" class="org.springframework.security.web.access.AccessDeniedHandlerImpl" 
+		p:errorPage="/accessDenied.jsp" />
+
+	<beans:bean id="httpSessionRequestCache" class="org.springframework.security.web.savedrequest.HttpSessionRequestCache" />
+	
+	<beans:bean id="loginUrlAuthenticationEntryPoint" class="org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint"
+		p:loginFormUrl="/login.jsp" />
+
+
+	
+	<beans:bean id="messageSource"
+		class="org.springframework.context.support.ReloadableResourceBundleMessageSource">
+		<beans:property name="basenames">
+			<beans:list>
+				<beans:value>classpath:spring_security_messages_zh_CN</beans:value>
+				<beans:value>classpath:messages</beans:value><!-- 国际化需要的文档 -->
+			</beans:list>
+		</beans:property>
+	</beans:bean>
+	
+	
+	<!-- 国际化操作 拦截器 必需配置,可以和其它国际化方式通用 -->      
+	<beans:bean id="localeChangeInterceptor" 
+		class="org.springframework.web.servlet.i18n.LocaleChangeInterceptor" />
+	<!-- 将拦截器注入到 UrlHandlerMapping -->
+	<beans:bean id="defaultUrlMapping" class="org.springframework.web.servlet.handler.BeanNameUrlHandlerMapping">
+		<beans:property name="interceptors" ref="localeChangeInterceptor" />
+		<beans:property name="order">
+			<beans:value>1</beans:value>
+		</beans:property>
+	</beans:bean>
+	<!-- 基于请求的国际化配置 -->
+<!--	<beans:bean id="localeResolver" class="org.springframework.web.servlet.i18n.AcceptHeaderLocaleResolver"/>-->
+
+	<!-- 基于Session的国际化配置 -->
+	<beans:bean id="localeResolver" class="org.springframework.web.servlet.i18n.SessionLocaleResolver"/>
+
+	<!-- Https配置 -->
+	<beans:bean id="channelProcessingFilter" class="org.springframework.security.web.access.channel.ChannelProcessingFilter" 
+		p:channelDecisionManager-ref="channelDecisionManager">
+		<beans:property name="securityMetadataSource">
+			 <filter-security-metadata-source>
+      			 <intercept-url pattern="/**" access="REQUIRES_SECURE_CHANNEL"/>
+    		</filter-security-metadata-source>
+		</beans:property>
+	</beans:bean>
+	
+	<beans:bean id="channelDecisionManager" class="org.springframework.security.web.access.channel.ChannelDecisionManagerImpl" >
+		<beans:property name="channelProcessors">
+			<beans:list>
+					<beans:bean class="org.springframework.security.web.access.channel.SecureChannelProcessor" >
+						<beans:property name="entryPoint">
+							<beans:bean class="org.springframework.security.web.access.channel.RetryWithHttpsEntryPoint">
+								<beans:property name="portMapper">
+									<beans:bean class="org.springframework.security.web.PortMapperImpl">
+										<beans:property name="portMappings">
+											<beans:map>
+												<beans:entry key="8080" value="8443"></beans:entry>
+											</beans:map>
+										</beans:property>
+									</beans:bean>
+								</beans:property>
+							</beans:bean>
+						</beans:property>
+					</beans:bean>
+					
+					<beans:bean class="org.springframework.security.web.access.channel.InsecureChannelProcessor"  >
+						<beans:property name="entryPoint">
+							<beans:bean class="org.springframework.security.web.access.channel.RetryWithHttpEntryPoint">
+							</beans:bean>
+						</beans:property>
+					</beans:bean>
+			</beans:list>
+		</beans:property>
+	</beans:bean>
+	
+</beans:beans>
